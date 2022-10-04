@@ -16,8 +16,6 @@ end Basys3;
 
 architecture Behavioral of Basys3 is
 
--- Inicio de la declaración de los componentes.
-
 component Clock_Divider -- No Tocar
     Port (
         clk         : in    std_logic;
@@ -25,9 +23,9 @@ component Clock_Divider -- No Tocar
         clock       : out   std_logic
           );
     end component;
-    
+
 component Display_Controller -- No Tocar
-    Port (  
+    Port (
         dis_a       : in    std_logic_vector (3 downto 0);
         dis_b       : in    std_logic_vector (3 downto 0);
         dis_c       : in    std_logic_vector (3 downto 0);
@@ -37,7 +35,7 @@ component Display_Controller -- No Tocar
         an          : out   std_logic_vector (3 downto 0)
           );
     end component;
-    
+
 component Debouncer -- No Tocar
     Port (
         clk         : in    std_logic;
@@ -45,7 +43,7 @@ component Debouncer -- No Tocar
         signal_out     : out   std_logic
           );
     end component;
-            
+
 
 component ROM -- No Tocar
     Port (
@@ -59,7 +57,7 @@ component ROM -- No Tocar
     end component;
 
 component RAM -- No Tocar
-    Port (  
+    Port (
         clock       : in    std_logic;
         write       : in    std_logic;
         address     : in    std_logic_vector (11 downto 0);
@@ -67,7 +65,7 @@ component RAM -- No Tocar
         dataout     : out   std_logic_vector (15 downto 0)
           );
     end component;
-    
+
 component Programmer -- No Tocar
     Port (
         rx          : in    std_logic;
@@ -80,7 +78,7 @@ component Programmer -- No Tocar
         dataout     : out   std_logic_vector(35 downto 0)
         );
     end component;
-    
+
 component CPU is
     Port (
            clock : in STD_LOGIC;
@@ -91,18 +89,15 @@ component CPU is
            ram_write : out STD_LOGIC;
            rom_address : out STD_LOGIC_VECTOR (11 downto 0);
            rom_dataout : in STD_LOGIC_VECTOR (35 downto 0);
-           dis : out STD_LOGIC_VECTOR (15 downto 0));
+           dis : out STD_LOGIC_VECTOR (15 downto 0);
+           led : out STD_LOGIC_VECTOR (15 downto 0));
     end component;
 
--- Fin de la declaración de los componentes.
-
--- Inicio de la declaración de señales.
-
 signal clock            : std_logic;                     -- Señal del clock reducido.
-            
-signal dis_a            : std_logic_vector(3 downto 0);  -- Señales de salida al display A.    
-signal dis_b            : std_logic_vector(3 downto 0);  -- Señales de salida al display B.     
-signal dis_c            : std_logic_vector(3 downto 0);  -- Señales de salida al display C.    
+
+signal dis_a            : std_logic_vector(3 downto 0);  -- Señales de salida al display A.
+signal dis_b            : std_logic_vector(3 downto 0);  -- Señales de salida al display B.
+signal dis_c            : std_logic_vector(3 downto 0);  -- Señales de salida al display C.
 signal dis_d            : std_logic_vector(3 downto 0);  -- Señales de salida al display D.
 
 signal dis              : std_logic_vector(15 downto 0); -- Señales de salida totalidad de los displays.
@@ -124,23 +119,21 @@ signal ram_address      : std_logic_vector(11 downto 0); -- Señales del direccio
 signal ram_datain       : std_logic_vector(15 downto 0); -- Señales de la palabra de entrada de la RAM.
 signal ram_dataout      : std_logic_vector(15 downto 0); -- Señales de la palabra de salida de la RAM.
 
--- Fin de la declaración de los señales.
-
 begin
 
 dis_a  <= dis(15 downto 12);
 dis_b  <= dis(11 downto 8);
 dis_c  <= dis(7 downto 4);
 dis_d  <= dis(3 downto 0);
-                    
--- Muxer del address de la ROM.          
+
+-- Muxer del address de la ROM.
 with clear select
     rom_address <= cpu_rom_address when '0',
                    pro_address when '1';
-                   
+
 -- Inicio de declaración de instancias.
 
--- Instancia de la CPU.        
+-- Instancia de la CPU.
 inst_CPU: CPU port map(
     clock       => clock,
     clear       => clear,
@@ -150,7 +143,8 @@ inst_CPU: CPU port map(
     ram_write   => write_ram,
     rom_address => cpu_rom_address,
     rom_dataout => rom_dataout,
-    dis         => dis
+    dis         => dis,
+    led         => led
     );
 
 -- Instancia de la memoria RAM.
@@ -171,15 +165,15 @@ inst_RAM: RAM port map(
     datain      => ram_datain,
     dataout     => ram_dataout
     );
-    
+
  -- Intancia del divisor de la señal del clock.
 inst_Clock_Divider: Clock_Divider port map(
-    speed       => "11",                    -- Selector de velocidad: "00" full, "01" fast, "10" normal y "11" slow. 
+    speed       => "11",                    -- Selector de velocidad: "00" full, "01" fast, "10" normal y "11" slow.
     clk         => clk,                     -- No Tocar - Entrada de la señal del clock completo (100Mhz).
     clock       => clock                    -- No Tocar - Salida de la señal del clock reducido: 25Mhz, 8hz, 2hz y 0.5hz.
     );
-    
- -- No Tocar - Intancia del controlador de los displays de 8 segmentos.    
+
+ -- No Tocar - Intancia del controlador de los displays de 8 segmentos.
 inst_Display_Controller: Display_Controller port map(
     dis_a       => dis_a,                   -- No Tocar - Entrada de señales para el display A.
     dis_b       => dis_b,                   -- No Tocar - Entrada de señales para el display B.
@@ -189,15 +183,15 @@ inst_Display_Controller: Display_Controller port map(
     seg         => seg,                     -- No Tocar - Salida de las señales de segmentos.
     an          => an                       -- No Tocar - Salida del selector de diplay.
 	);
-    
--- No Tocar - Intancias de los Debouncers.    
+
+-- No Tocar - Intancias de los Debouncers.
 inst_Debouncer0: Debouncer port map( clk => clk, signal_in => btn(0), signal_out => d_btn(0) );
 inst_Debouncer1: Debouncer port map( clk => clk, signal_in => btn(1), signal_out => d_btn(1) );
 inst_Debouncer2: Debouncer port map( clk => clk, signal_in => btn(2), signal_out => d_btn(2) );
 inst_Debouncer3: Debouncer port map( clk => clk, signal_in => btn(3), signal_out => d_btn(3) );
 inst_Debouncer4: Debouncer port map( clk => clk, signal_in => btn(4), signal_out => d_btn(4) );
 
--- No Tocar - Intancia del ROM Programmer.           
+-- No Tocar - Intancia del ROM Programmer.
 inst_Programmer: Programmer port map(
     rx          => rx,                      -- No Tocar - Salida de la señal de transmición.
     tx          => tx,                      -- No Tocar - Entrada de la señal de recepción.
@@ -208,9 +202,5 @@ inst_Programmer: Programmer port map(
     address     => pro_address(11 downto 0),-- No Tocar - Salida de señales del address de la ROM.
     dataout     => rom_datain               -- No Tocar - Salida de señales palabra de entrada de la ROM.
         );
-        
--- Fin de declaración de instancias.
 
--- Fin de declaración de comportamientos.
-  
 end Behavioral;
