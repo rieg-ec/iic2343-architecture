@@ -13,7 +13,7 @@ end ALU;
 
 architecture Behavioral of ALU is
 
-component Adder
+component Adder16
     Port(
         a : in std_logic_vector(15 downto 0);
         b : in std_logic_vector(15 downto 0);
@@ -23,10 +23,10 @@ component Adder
 end component;
 
 signal ci: std_logic;
-signal co: std_logic;
-signal alu_result   : std_logic_vector(15 downto 0);
-signal b_adder   : std_logic_vector(15 downto 0);
-signal result_adder   : std_logic_vector(15 downto 0);
+signal signal_co: std_logic;
+signal alu_result : std_logic_vector(15 downto 0);
+signal b_adder : std_logic_vector(15 downto 0);
+signal result_adder : std_logic_vector(15 downto 0);
 
 begin
 
@@ -41,30 +41,22 @@ with sop select b_adder <=
     not b when "001", -- negate substraend
     b when others;
 
-inst_Adder: Adder port map(
-        a => a,
-        b => b_adder,
-        ci => ci,
-        s => result_adder,
-        co => co
-);
-
 with sop select alu_result <=
-    result_adder     when "000",
-    result_adder     when "001",
-    a and b     when "010",
-    a or b     when "011",
-    a xor b     when "100",
-    not a     when "101",
+    result_adder when "001",
+    a and b when "010",
+    a or b when "011",
+    a xor b when "100",
+    not a when "101",
     '0' & a(15 downto 1) when "110", -- shift right
-    a(14 downto 0) & '0' when "111"; -- shift left
+    a(14 downto 0) & '0' when "111", -- shift left
+    result_adder when others;
 
 result  <= alu_result;
 
 -- carry flag
 with sop select c <=
-    co when "000",
-    co when "001",
+    signal_co when "000",
+    signal_co when "001",
     '0' when "010",
     '0' when "011",
     '0' when "100",
@@ -74,12 +66,21 @@ with sop select c <=
 
 -- negative flag
 with sop select n <=
-    not co when "001",
+    not signal_co when "001",
     '0' when others;
 
 -- zero flag
 with alu_result select z <=
     '1' when "0000000000000000",
     '0' when others;
+
+
+inst_Adder: Adder16 port map(
+        a => a,
+        b => b_adder,
+        ci => ci,
+        s => result_adder,
+        co => signal_co
+);
 
 end Behavioral;

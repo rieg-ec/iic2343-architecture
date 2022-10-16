@@ -1,5 +1,3 @@
--- NO TOCAR
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
@@ -16,7 +14,7 @@ end Programmer;
 
 architecture Behavioral of Programmer is
 
-component UART 
+component UART
     Port (  clk      : in  std_logic;
             rx       : in  std_logic;
             tx       : out  std_logic;
@@ -42,7 +40,7 @@ signal state : std_logic_vector(4 downto 0);
 signal ready_sinc : std_logic;
 signal bussy_sinc : std_logic;
 
- 
+
 begin
 
 tx_data <= "00000000";
@@ -78,14 +76,14 @@ data_prosses: process (rx_enable)
             if ( state = "00000" and rx_data = "11111111" ) then
                 bussy_sinc <= '0';
                 ready_sinc <= '0';
-            elsif( state = "00000" and rx_data = "10101010") then 
+            elsif( state = "00000" and rx_data = "10101010") then
                 state <= "00001";
                 ready_sinc <= '0';
             elsif( state = "00001" and rx_data = "10101010") then
                 bussy_sinc <= '1';
-                state <= "10001"; 
+                state <= "10001";
             elsif( state = "00001") then
-                state <= "00000"; 
+                state <= "00000";
             elsif ( state = "10001" ) then
                 memory(0) <= rx_data;
                 state <= "10010";
@@ -97,18 +95,18 @@ data_prosses: process (rx_enable)
                 state <= "10100";
             elsif ( state = "10100" ) then
                 memory(3) <= rx_data;
-                state <= "10101";  
+                state <= "10101";
             elsif ( state = "10101" ) then
                 memory(4) <= rx_data;
-                state <= "10110";     
+                state <= "10110";
             elsif ( state = "10110" ) then
                 memory(5) <= rx_data;
-                state <= "10111";                    
+                state <= "10111";
             elsif ( state = "10111" and rx_data = "10101010" ) then
                 state <= "00000";
                 ready_sinc <= '1';
                 address <= memory(0) & memory(1)(7 downto 4);
-                dataout <= memory(1)(3 downto 0) & memory(2) & memory(3) & memory(4) & memory(5);   
+                dataout <= memory(1)(3 downto 0) & memory(2) & memory(3) & memory(4) & memory(5);
             elsif ( state = "10111") then
                 state <= "00000";
             end if;
@@ -125,6 +123,6 @@ inst_UART: UART port map(
         tx_ready  => tx_ready,
         rx_data   => rx_data,
         tx_data   => tx_data
-    );   
+    );
 
 end Behavioral;

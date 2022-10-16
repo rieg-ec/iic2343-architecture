@@ -16,7 +16,7 @@ constant full_max         : std_logic_vector(26 downto 0) := "000000000000000000
 constant fast_max         : std_logic_vector(26 downto 0) := "000010111110101111000010000";
 constant normal_max       : std_logic_vector(26 downto 0) := "001011111010111100001000000";
 constant slow_max         : std_logic_vector(26 downto 0) := "101111101011110000100000000";
-
+ 
 signal clock_divide_max     : std_logic_vector(26 downto 0);
 signal clock_divide_counter : std_logic_vector(26 downto 0) := (others => '0');
 signal internal_clock       : std_logic;

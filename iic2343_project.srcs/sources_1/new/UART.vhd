@@ -1,5 +1,3 @@
--- NO TOCAR
-
 -- Eric Bainville
 -- Mar 2013
 
@@ -20,14 +18,14 @@ entity UART is
   port (
     clk: in std_logic;                         -- clock
     reset: in std_logic;                       -- reset
-    
+
     -- Client interface
     rx_data: out std_logic_vector(7 downto 0); -- received byte
     rx_enable: out std_logic;                  -- validates received byte (1 system clock spike)
     tx_data: in std_logic_vector(7 downto 0);  -- byte to send
     tx_enable: in std_logic;                   -- validates byte to send if tx_ready is '1'
     tx_ready: out std_logic;                   -- if '1', we can send a new byte, otherwise we won't take it
-    
+
     -- Physical interface
     rx: in std_logic;
     tx: out std_logic
@@ -53,12 +51,12 @@ architecture Behavioral of UART is
     nbits: std_logic_vector(3 downto 0); -- number of bits left to send
     ready: std_logic; -- signal we are accepting a new byte
   end record;
-  
+
   signal rx_state,rx_state_next: rx_state_t;
   signal tx_state,tx_state_next: tx_state_t;
   signal sample: std_logic; -- 1 clk spike at 16x baud rate
   signal sample_counter: std_logic_vector(COUNTER_BITS-1 downto 0); -- should fit values in 0..DIVISOR-1
-  
+
 begin
 
   -- sample signal at 16x baud rate, 1 CLK spikes
@@ -95,12 +93,12 @@ begin
       tx_state <= tx_state_next;
     end if;
   end process;
-  
+
   -- RX FSM
   rx_process: process (rx_state,sample,rx) is
   begin
     case rx_state.fsm_state is
-    
+
     when idle =>
       rx_state_next.counter <= (others => '0');
       rx_state_next.bits <= (others => '0');
@@ -113,7 +111,7 @@ begin
         -- keep idle
         rx_state_next.fsm_state <= idle;
       end if;
-      
+
     when active =>
       rx_state_next <= rx_state;
       if sample = '1' then
@@ -129,22 +127,22 @@ begin
         end if;
         rx_state_next.counter <= rx_state.counter + 1;
       end if;
-      
+
     end case;
   end process;
-  
+
   -- RX output
   rx_output: process (rx_state) is
   begin
     rx_enable <= rx_state.enable;
     rx_data <= rx_state.bits;
   end process;
-  
+
   -- TX FSM
   tx_process: process (tx_state,sample,tx_enable,tx_data) is
   begin
     case tx_state.fsm_state is
-    
+
     when idle =>
       if tx_enable = '1' then
         -- start a new bit
@@ -161,7 +159,7 @@ begin
         tx_state_next.fsm_state <= idle;
         tx_state_next.ready <= '1';
       end if;
-      
+
     when active =>
       tx_state_next <= tx_state;
       if sample = '1' then
@@ -181,7 +179,7 @@ begin
         end if;
         tx_state_next.counter <= tx_state.counter + 1;
       end if;
-      
+
     end case;
   end process;
 

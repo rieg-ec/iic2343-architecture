@@ -1,15 +1,15 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity Adder is
+entity Adder16 is
     Port ( a  : in  std_logic_vector (15 downto 0);
            b  : in  std_logic_vector (15 downto 0);
            ci : in  std_logic;
            s  : out std_logic_vector (15 downto 0);
            co : out std_logic);
-end Adder;
+end Adder16;
 
-architecture Behavioral of Adder is
+architecture Behavioral of Adder16 is
 
 component FA
     Port ( a  : in  std_logic;

@@ -1,5 +1,3 @@
--- NO TOCAR
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
@@ -19,7 +17,7 @@ architecture Behavioral of RAM is
 
     type memory_array is array (0 to ( 2 ** 12 ) - 1  ) of std_logic_vector (15 downto 0);
 	signal memory : memory_array;
-	
+
 begin
 
 process (clock)

@@ -1,5 +1,3 @@
--- NO TOCAR
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.std_logic_unsigned.all;
@@ -16,7 +14,7 @@ entity Display_Controller is
           );
 end Display_Controller;
 
-architecture Behavioral of Display_Controller is    
+architecture Behavioral of Display_Controller is
 
 constant clock_divide_max : std_logic_vector(16 downto 0) := "11110000100000000";
 
@@ -44,13 +42,13 @@ with display select
                 "1011" when "01",
                 "1101" when "10",
                 "1110" when "11";
-          
+
 with display select
     number <=   dis_a when "00",
                 dis_b when "01",
                 dis_c when "10",
                 dis_d when "11";
-   
+
 with number select
     seg <=      "11000000" when "0000",
                 "11111001" when "0001",
@@ -68,5 +66,5 @@ with number select
                 "10100001" when "1101",
                 "10000110" when "1110",
                 "10001110" when "1111";
-            
+
 end Behavioral;
