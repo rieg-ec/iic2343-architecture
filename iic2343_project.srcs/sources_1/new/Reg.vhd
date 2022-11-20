@@ -28,7 +28,7 @@ begin
 reg_prosses : process (clock, clear)
         begin
           if (clear = '1') then
-            reg <= (others => '0');
+            reg <= (others => clear_bit);
           elsif (rising_edge(clock)) then
             if (load = '1') then
                 reg <= datain;
