@@ -124,8 +124,8 @@ begin
 
 rom_address <= signal_reg_pc_out;
 
-dis <= signal_reg_a_out(7 downto 0) & signal_reg_b_out(7 downto 0);
-led <= signal_c & signal_z & signal_n & signal_loadPC & signal_reg_pc_out;
+-- dis <= signal_reg_a_out(7 downto 0) & signal_reg_b_out(7 downto 0);
+-- led <= signal_c & signal_z & signal_n & signal_loadPC & signal_reg_sp_out;
 
 signal_rom_dataout_12_bit_lit <= rom_dataout(31 downto 20);
 signal_rom_dataout_16_bit_lit <= rom_dataout(35 downto 20);

@@ -93,14 +93,40 @@ component CPU is
            led : out STD_LOGIC_VECTOR (15 downto 0));
     end component;
 
+component Reg
+    generic(
+      datain_width : integer := 16;
+      dataout_width : integer := 16;
+      clear_bit : std_logic := '0'
+    );
+    Port (
+      clock    : in  std_logic;
+      clear    : in  std_logic;
+      load     : in  std_logic;
+      up       : in  std_logic;
+      down     : in  std_logic;
+      datain   : in  std_logic_vector (datain_width-1 downto 0);
+      dataout  : out std_logic_vector (dataout_width-1 downto 0)
+    );
+end component;
+
+
+component Timer is
+  Port (
+    clk : in STD_LOGIC;
+    clear   : in STD_LOGIC;
+    seconds : out STD_LOGIC_VECTOR (15 downto 0);
+    mseconds: out STD_LOGIC_VECTOR (15 downto 0);
+    useconds: out STD_LOGIC_VECTOR (15 downto 0));
+  end component;
+
+
 signal clock            : std_logic;                     -- Señal del clock reducido.
 
 signal dis_a            : std_logic_vector(3 downto 0);  -- Señales de salida al display A.
 signal dis_b            : std_logic_vector(3 downto 0);  -- Señales de salida al display B.
 signal dis_c            : std_logic_vector(3 downto 0);  -- Señales de salida al display C.
 signal dis_d            : std_logic_vector(3 downto 0);  -- Señales de salida al display D.
-
-signal dis              : std_logic_vector(15 downto 0); -- Señales de salida totalidad de los displays.
 
 signal d_btn            : std_logic_vector(4 downto 0);  -- Señales de botones con anti-rebote.
 
@@ -118,31 +144,63 @@ signal write_ram        : std_logic;                     -- Señal de escritura d
 signal ram_address      : std_logic_vector(11 downto 0); -- Señales del direccionamiento de la RAM.
 signal ram_datain       : std_logic_vector(15 downto 0); -- Señales de la palabra de entrada de la RAM.
 signal ram_dataout      : std_logic_vector(15 downto 0); -- Señales de la palabra de salida de la RAM.
+signal mux_in_out       : std_logic_vector(15 downto 0);
+
+signal seconds : std_logic_vector(15 downto 0);
+signal mseconds : std_logic_vector(15 downto 0);
+signal useconds : std_logic_vector(15 downto 0);
+
+signal reg_led_out : std_logic_vector(15 downto 0);
+signal reg_dis_out : std_logic_vector(15 downto 0);
+
+signal write_reg_led : std_logic;
+signal write_reg_dis : std_logic;
 
 begin
 
-dis_a  <= dis(15 downto 12);
-dis_b  <= dis(11 downto 8);
-dis_c  <= dis(7 downto 4);
-dis_d  <= dis(3 downto 0);
+dis_a <= reg_dis_out(15 downto 12);
+dis_b <= reg_dis_out(11 downto 8);
+dis_c <= reg_dis_out(7 downto 4);
+dis_d <= reg_dis_out(3 downto 0);
+
+led <= reg_led_out;
 
 with clear select
     rom_address <= cpu_rom_address when '0',
                    pro_address when '1',
                   cpu_rom_address when others;
 
+-- mux IN
+with ram_address select -- OUT
+  mux_in_out <= "0000000000000000" when "000000000000", -- led, IN
+                sw when "000000000001",
+                "0000000000000000" when "000000000010", -- display, IN
+                "00000000000" & d_btn when "000000000011",
+                seconds when "000000000100",
+                mseconds when "000000000101",
+                useconds when "000000000110",
+                "0000000000000000" when "000000000111", -- lcd, IN
+                ram_dataout when others;
+
+-- demux OUT
+with ram_address select
+  write_reg_led <= write_ram when "000000000000",
+                  '0' when others;
+with ram_address select
+  write_reg_dis <= write_ram when "000000000010",
+                  '0' when others;
 
 inst_CPU: CPU port map(
     clock       => clock,
     clear       => clear,
     ram_address => ram_address,
     ram_datain  => ram_datain,
-    ram_dataout => ram_dataout,
+    ram_dataout => mux_in_out,
     ram_write   => write_ram,
     rom_address => cpu_rom_address,
     rom_dataout => rom_dataout,
-    dis         => dis,
-    led         => led
+    dis         => open,
+    led         => open
     );
 
 inst_ROM: ROM port map(
@@ -163,7 +221,7 @@ inst_RAM: RAM port map(
     );
 
 inst_Clock_Divider: Clock_Divider port map(
-    speed       => "01",                    -- Selector de velocidad: "00" full, "01" fast, "10" normal y "11" slow.
+    speed       => "00",                    -- Selector de velocidad: "00" full, "01" fast, "10" normal y "11" slow.
     clk         => clk,                     -- Entrada de la señal del clock completo (100Mhz).
     clock       => clock                    -- Salida de la señal del clock reducido: 25Mhz, 8hz, 2hz y 0.5hz.
     );
@@ -194,5 +252,33 @@ inst_Programmer: Programmer port map(
     address     => pro_address(11 downto 0), --  Salida de señales del address de la ROM.
     dataout     => rom_datain                --  Salida de señales palabra de entrada de la ROM.
         );
+
+inst_Timer: Timer port map(
+  clk => clk,
+  clear => clear,
+  seconds => seconds,
+  mseconds => mseconds,
+  useconds => useconds
+);
+
+inst_REG_DIS : REG port map(
+    clock => clock,
+    clear => clear,
+    load => write_reg_dis,
+    up => '0',
+    down => '0',
+    datain => ram_datain,
+    dataout => reg_dis_out
+  );
+
+inst_REG_LED : REG port map(
+    clock => clock,
+    clear => clear,
+    load => write_reg_led,
+    up => '0',
+    down => '0',
+    datain => ram_datain,
+    dataout => reg_led_out
+  );
 
 end Behavioral;
